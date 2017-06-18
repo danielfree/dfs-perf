@@ -29,6 +29,7 @@ for slave in $UNIQ_SLAVES; do
   echo -n "Copy configurations to $slave... "
   scp $DFS_PERF_CONF_DIR/dfs-perf-env.sh $slave:$DFS_PERF_CONF_DIR/dfs-perf-env.sh
   scp $DFS_PERF_CONF_DIR/testsuite/$1.xml $slave:$DFS_PERF_CONF_DIR/testsuite/$1.xml
+  scp DFS_PERF_CONF_DIR/alluxio-site.properties $slave:$DFS_PERF_CONF_DIR/alluxio-site.properties
   sleep 0.02
 done
 wait
