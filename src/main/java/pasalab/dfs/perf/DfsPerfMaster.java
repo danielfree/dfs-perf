@@ -7,56 +7,25 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadedSelectorServer;
+import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 
 import pasalab.dfs.perf.conf.PerfConf;
 import pasalab.dfs.perf.thrift.MasterService;
 
 public class DfsPerfMaster {
-  public class MasterServiceThread extends Thread {
-    TNonblockingServerSocket mServerTNonblockingServerSocket = null;
-    TServer mMasterServiceServer = null;
-
-    public void setup(String hostname, int port) throws Exception {
-      InetSocketAddress address = new InetSocketAddress(hostname, port);
-      mServerTNonblockingServerSocket = new TNonblockingServerSocket(address);
-      MasterServiceHandler masterServiceHandler = new MasterServiceHandler(mSlaveStatus);
-      MasterService.Processor<MasterServiceHandler> masterServiceProcessor =
-          new MasterService.Processor<MasterServiceHandler>(masterServiceHandler);
-      mMasterServiceServer =
-          new TThreadedSelectorServer(new TThreadedSelectorServer.Args(
-              mServerTNonblockingServerSocket).processor(masterServiceProcessor).selectorThreads(3)
-              .acceptQueueSizePerThread(3000)
-              .workerThreads(Runtime.getRuntime().availableProcessors()));
-    }
-
-    @Override
-    public void run() {
-      mMasterServiceServer.serve();
-    }
-
-    public void shutdown() {
-      this.interrupt();
-      if (mMasterServiceServer != null) {
-        mMasterServiceServer.stop();
-      }
-      if (mServerTNonblockingServerSocket != null) {
-        mServerTNonblockingServerSocket.close();
-      }
-    }
-  }
 
   private static final Logger LOG = Logger.getLogger(PerfConstants.PERF_LOGGER_TYPE);
 
-  private static void abortAllSlaves() {
-    try {
-      java.lang.Runtime.getRuntime().exec(PerfConf.get().DFS_PERF_HOME + "/bin/dfs-perf-abort");
-    } catch (IOException e) {
-      e.printStackTrace();
-      LOG.error(e);
-    }
+  private SlaveStatus mSlaveStatus;
+  private MasterServiceThread mMasterServiceThread;
+
+  public DfsPerfMaster(int slavesNum, Set<String> slaves) {
+    mSlaveStatus = new SlaveStatus(slavesNum, slaves);
+    mMasterServiceThread = new MasterServiceThread();
   }
 
   public static void main(String[] args) {
@@ -67,7 +36,7 @@ public class DfsPerfMaster {
       int index = 0;
       slavesNum = Integer.parseInt(args[0]);
       slaves = new HashSet<String>(slavesNum);
-      for (index = 1; index < slavesNum + 1; index ++) {
+      for (index = 1; index < slavesNum + 1; index++) {
         if (!slaves.add((index - 1) + "@" + args[index])) {
           throw new Exception("Slave name replicated: " + args[index]);
         }
@@ -95,14 +64,6 @@ public class DfsPerfMaster {
     }
   }
 
-  private SlaveStatus mSlaveStatus;
-  private MasterServiceThread mMasterServiceThread;
-
-  public DfsPerfMaster(int slavesNum, Set<String> slaves) {
-    mSlaveStatus = new SlaveStatus(slavesNum, slaves);
-    mMasterServiceThread = new MasterServiceThread();
-  }
-
   private boolean startMasterService() {
     try {
       mMasterServiceThread.setup(PerfConf.get().DFS_PERF_MASTER_HOSTNAME,
@@ -124,7 +85,7 @@ public class DfsPerfMaster {
     PerfConf conf = PerfConf.get();
     while (true) {
       try {
-        Thread.sleep(2000);
+        Thread.sleep(4000);
       } catch (InterruptedException e) {
         e.printStackTrace();
         return false;
@@ -168,6 +129,15 @@ public class DfsPerfMaster {
     return false;
   }
 
+  private static void abortAllSlaves() {
+    try {
+      java.lang.Runtime.getRuntime().exec(PerfConf.get().DFS_PERF_HOME + "/bin/dfs-perf-abort");
+    } catch (IOException e) {
+      e.printStackTrace();
+      LOG.error(e);
+    }
+  }
+
   public boolean start() {
     if (!startMasterService()) {
       return false;
@@ -185,5 +155,41 @@ public class DfsPerfMaster {
   public void stop() throws Exception {
     mSlaveStatus.cleanup();
     stopMasterService();
+  }
+
+  public class MasterServiceThread extends Thread {
+
+    TNonblockingServerSocket mServerTNonblockingServerSocket = null;
+    TServer mMasterServiceServer = null;
+
+    public void setup(String hostname, int port) throws Exception {
+      InetSocketAddress address = new InetSocketAddress(hostname, port);
+      mServerTNonblockingServerSocket = new TNonblockingServerSocket(address);
+      MasterServiceHandler masterServiceHandler = new MasterServiceHandler(mSlaveStatus);
+      MasterService.Processor<MasterServiceHandler> masterServiceProcessor =
+          new MasterService.Processor<MasterServiceHandler>(masterServiceHandler);
+      mMasterServiceServer =
+          new TThreadedSelectorServer(new TThreadedSelectorServer.Args(
+              mServerTNonblockingServerSocket).transportFactory(new TFramedTransport.Factory())
+              .protocolFactory(new TBinaryProtocol.Factory()).processor(masterServiceProcessor)
+              .selectorThreads(100)
+              .acceptQueueSizePerThread(3000)
+              .workerThreads(Runtime.getRuntime().availableProcessors()));
+    }
+
+    @Override
+    public void run() {
+      mMasterServiceServer.serve();
+    }
+
+    public void shutdown() {
+      this.interrupt();
+      if (mMasterServiceServer != null) {
+        mMasterServiceServer.stop();
+      }
+      if (mServerTNonblockingServerSocket != null) {
+        mServerTNonblockingServerSocket.close();
+      }
+    }
   }
 }

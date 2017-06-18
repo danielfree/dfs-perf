@@ -11,7 +11,6 @@ import pasalab.dfs.perf.basic.TaskConfiguration;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
-import alluxio.client.ClientContext;
 import alluxio.client.ReadType;
 import alluxio.client.file.FileSystem;
 import alluxio.client.WriteType;
@@ -42,7 +41,6 @@ public class PerfFileSystemAlluxioFS extends PerfFileSystem {
 
     Configuration.set(PropertyKey.MASTER_HOSTNAME, uri.getHost());
     Configuration.set(PropertyKey.MASTER_RPC_PORT, Integer.toString(uri.getPort()));
-    ClientContext.init();
 
     if (taskConf == null) {
       blockSizeByte = 1024 * 1024 * 1024;
@@ -67,6 +65,7 @@ public class PerfFileSystemAlluxioFS extends PerfFileSystem {
   @Override
   public void close() throws IOException {
   }
+
 
   @Override
   public void connect() throws IOException {
@@ -135,6 +134,7 @@ public class PerfFileSystemAlluxioFS extends PerfFileSystem {
   @Override
   public OutputStream getOutputStream(String path) throws IOException {
     AlluxioURI uri = new AlluxioURI(path);
+
     try {
       return mAlluxioFs.createFile(uri, mWriteOptions);
     } catch (AlluxioException e) {

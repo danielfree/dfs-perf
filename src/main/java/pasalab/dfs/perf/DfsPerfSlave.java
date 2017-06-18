@@ -49,8 +49,10 @@ public class DfsPerfSlave {
       if (!task.run(taskContext)) {
         masterClient.slave_finish(taskId, nodeName, false);
       } else {
-        masterClient.slave_finish(taskId, nodeName,
-            task.cleanup(taskContext) & taskContext.getSuccess());
+        boolean success = task.cleanup(taskContext) & taskContext.getSuccess();
+        LOG.info("sending finish sign to master! "+taskId+"/"+nodeName+"/"+success);
+        masterClient.slave_finish(taskId, nodeName, success);
+        LOG.info("I'm done here");
       }
     } catch (Exception e) {
       LOG.error("Error in task", e);

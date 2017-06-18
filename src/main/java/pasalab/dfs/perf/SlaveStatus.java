@@ -88,7 +88,7 @@ public class SlaveStatus {
     fs.close();
   }
 
-  public synchronized int finished(boolean failedThenAbort, int failedPercentage) {
+  public int finished(boolean failedThenAbort, int failedPercentage) {
     int success;
     int failed;
     failed = mFailedSlaves.size();
@@ -102,7 +102,7 @@ public class SlaveStatus {
     return 0;
   }
 
-  public synchronized String getFinishStatus(boolean debug) {
+  public String getFinishStatus(boolean debug) {
     StringBuffer sbStatus = new StringBuffer();
     int running;
     int success;

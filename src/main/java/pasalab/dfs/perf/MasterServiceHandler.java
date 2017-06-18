@@ -18,14 +18,16 @@ public class MasterServiceHandler implements MasterService.Iface {
     return mSlaveStatus.allReady(taskId + "@" + nodeName);
   }
 
-  public void slave_finish(int taskId, String nodeName, boolean successFinish)
+  public boolean slave_finish(int taskId, String nodeName, boolean successFinish)
       throws SlaveNotRegisterException, TException {
     mSlaveStatus.slaveFinish(taskId + "@" + nodeName, successFinish);
+    return true;
   }
 
-  public void slave_ready(int taskId, String nodeName, boolean successSetup)
+  public boolean slave_ready(int taskId, String nodeName, boolean successSetup)
       throws SlaveNotRegisterException, TException {
     mSlaveStatus.slaveReady(taskId + "@" + nodeName, successSetup);
+    return true;
   }
 
   public boolean slave_register(int taskId, String nodeName, String cleanupDir)
