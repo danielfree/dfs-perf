@@ -14,10 +14,10 @@ service MasterService {
   bool slave_canRun(1: i32 taskId, 2: string nodeName)
     throws (1: SlaveNotRegisterException e)
 
-  void slave_finish(1: i32 taskId, 2: string nodeName, 3: bool successFinish)
+  bool slave_finish(1: i32 taskId, 2: string nodeName, 3: bool successFinish)
     throws (1: SlaveNotRegisterException e)
 
-  void slave_ready(1: i32 taskId, 2: string nodeName, 3: bool successSetup)
+  bool slave_ready(1: i32 taskId, 2: string nodeName, 3: bool successSetup)
     throws (1: SlaveNotRegisterException e)
 
   bool slave_register(1: i32 taskId, 2: string nodeName, 3: string cleanupDir)
