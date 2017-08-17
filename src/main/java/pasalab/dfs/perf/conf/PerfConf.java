@@ -35,6 +35,8 @@ public class PerfConf extends Utils {
   public final int DFS_PERF_MASTER_PORT;
   public final long UNREGISTER_TIMEOUT_MS;
 
+  public final int DFS_PERF_WRITE_TYPE;
+
   private PerfConf() {
     if (System.getProperty("pasalab.dfs.perf.home") == null) {
       LOG.warn("pasalab.dfs.perf.home is not set."
@@ -57,5 +59,7 @@ public class PerfConf extends Utils {
     DFS_PERF_MASTER_HOSTNAME = getProperty("pasalab.dfs.perf.master.hostname", "localhost");
     DFS_PERF_MASTER_PORT = getIntProperty("pasalab.dfs.perf.master.port", 23333);
     UNREGISTER_TIMEOUT_MS = getLongProperty("pasalab.dfs.perf.unregister.timeout.ms", 10000);
+
+    DFS_PERF_WRITE_TYPE = getIntProperty("pasalab.dfs.perf.write.type",1);
   }
 }
