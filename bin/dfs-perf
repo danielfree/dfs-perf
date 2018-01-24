@@ -27,7 +27,7 @@ SLAVES=`sort "$NODELIST"|sed  "s/#.*$//;/^$/d"`
 UNIQ_SLAVES=`sort "$NODELIST" | uniq | sed  "s/#.*$//;/^$/d"`
 for slave in $UNIQ_SLAVES; do
   echo "Copy configurations to $slave..."
-  rsync -aze ssh $DFS_PERF_CONF_DIR $slave:$DFS_PERF_CONF_DIR
+  rsync -aze ssh $DFS_PERF_CONF_DIR/ $slave:$DFS_PERF_CONF_DIR
   sleep 0.02
 done
 wait
